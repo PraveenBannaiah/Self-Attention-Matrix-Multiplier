@@ -124,6 +124,8 @@ module MyDesign(
   begin
     case(current_state)
 		S0: begin                               //RESET and IDLE block 
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 		    if((dut_valid)&&(reset_n))
 			begin
 				next_state = S1;
@@ -150,8 +152,8 @@ module MyDesign(
 			end
 			
 		S3: begin                                                   //The state we loop around at the time of data collection 
-		reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_input_read_address = sramA_pointer;
 			reg_dut__tb__sram_weight_read_address = sramB_pointer;
 			if((sramA_column_counter+1) > columns_A)
@@ -171,10 +173,9 @@ module MyDesign(
 			next_state = S4;
 			pointer_update_flag = 1'b1;
 			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_input_read_address = sramA_pointer;
 			reg_dut__tb__sram_weight_read_address = sramB_pointer;
-			
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			end
 		
 			
@@ -204,7 +205,7 @@ module MyDesign(
 				end
 				else
 				begin
-					next_state = S6;                                //Go to stage 2
+					next_state = S6;
 					pointer_update_flag = 1'b0;
 					dut_ready_temp = 1'b0;
 				end
@@ -229,47 +230,51 @@ module MyDesign(
 			reg_dut__tb__sram_weight_read_address = sramB_pointer;
 			pointer_update_flag = 1'b1;
 			reg_dut__tb__sram_result_write_enable = 1'b0;
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			next_state = S3;
 			end
 			
-		S6: begin                                                      //read the data
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
-			reg_dut__tb__sram_result_write_enable = 1'b0;
-			reg_dut__tb__sram_scratchpad_read_address = 1'b1;
-			reg_dut__tb__sram_result_read_address = 1'b0;
+			
+		S6: begin
 			next_state = S7;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			end
 			
-		S7: begin                                                                //Same as S3
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+		S7: begin
 			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_read_address = sramB_pointer;
 			reg_dut__tb__sram_result_read_address = sramA_pointer;
-			if((sramA_column_counter+1) > columns_A)
+			
+			if(sramA_column_counter == columns_A)
 			begin
 				next_state = S9;
-				pointer_update_flag_stage2 = 1'b1;
+				pointer_update_flag_stage2 = 1'b0;
 			end
 			else
 			begin
 				next_state = S7;
 				pointer_update_flag_stage2 = 1'b1;
-				
-			end
 			end
 			
-		S9: begin
+			end
+			
+		S9:  begin
 			next_state = S10;
 			pointer_update_flag_stage2 = 1'b1;
-			reg_dut__tb__sram_result_write_enable = 1'b0;
-			reg_dut__tb__sram_result_read_address = sramA_pointer;
-			reg_dut__tb__sram_scratchpad_read_address = sramB_pointer;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
 			
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			reg_dut__tb__sram_result_write_enable = 1'b0; 
 			end
 			
-		S10: begin                                                            //Write stage 
+		S10: begin
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			
+			pointer_update_flag_stage2 = 1'b1;
+			
 			reg_dut__tb__sram_result_write_address = sramC_pointer;
 			reg_dut__tb__sram_result_write_data = accum_result;
 			reg_dut__tb__sram_result_write_enable = 1'b1;
@@ -277,37 +282,16 @@ module MyDesign(
 			reg_dut__tb__sram_result_read_address = sramA_pointer;
 			reg_dut__tb__sram_scratchpad_read_address = sramB_pointer;
 			
-			
-			if((Arow_tracker) > rows_A)
+			if((Arow_tracker > rows_A))
 			begin
 				next_state = S0;                                //Go to stage 3
 				pointer_update_flag_stage2 = 1'b0;
 				dut_ready_temp = 1'b1;
 			end
-			else if ((Bcolumn_tracker+1) > columns_B)
-				begin
-				next_state = S11;
-				pointer_update_flag_stage2 = 1'b1;
-				dut_ready_temp = 1'b0;
-				end
-				
-			else 
-			begin
+			
+			else
 				next_state = S7;
-				pointer_update_flag_stage2 = 1'b1;
-				dut_ready_temp = 1'b0;
 			end
-			end
-			
-		S11: begin
-			reg_dut__tb__sram_result_read_address = sramA_pointer;
-			reg_dut__tb__sram_scratchpad_read_address = sramB_pointer;
-			pointer_update_flag_stage2 = 1'b1;
-			reg_dut__tb__sram_result_write_enable = 1'b0;
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
-			next_state = S7;
-			end
-			
 			
 			
 		default: begin
@@ -414,11 +398,11 @@ begin
 	begin 
 		Arow_tracker <= 1'b1;
 		Bcolumn_tracker <= 1'b1;
-		sramA_pointer <= 1'b1;
-		sramB_pointer <= 2'b10;
-		scratchpad_pointer <= 1'b0;
+		sramA_pointer <= 1'b0;
+		sramB_pointer <= 1'b1;
+		//scratchpad_pointer <= 1'b1;
 		first_address_of_a_row <= 1'b0;
-		sramA_column_counter<= 2'b10;
+		sramA_column_counter<= 1'b1;
 		accum_result <= 1'b0;
 		pointer_update_flag <= 1'b0;
 		pointer_update_flag_stage2 <= 1'b0;
@@ -432,51 +416,55 @@ begin
 	end
 	
 	//Performing multiplication 
-	if((current_state == S7)|| (current_state == S9) || (current_state == S11))
+	if((current_state == S7)||(current_state == S9))
 	begin
-		accum_result <= accum_result + tb__dut__sram_result_read_data * tb__dut__sram_scratchpad_read_data;
+		if((reg_dut__tb__sram_result_read_address == 1'b0)&&(current_state == S7))
+			accum_result <= 1'b0;
+		else
+			accum_result <= accum_result + tb__dut__sram_result_read_data * tb__dut__sram_scratchpad_read_data;
 	end
 	
-	//Updating SRAMC pointers
-	if (current_state == S10)
+	//Resetting accum register
+	if(current_state == S10)
 	begin
-	accum_result <= tb__dut__sram_result_read_data * tb__dut__sram_scratchpad_read_data;
-	sramC_pointer <= sramC_pointer + 1;
-	//accum_result <= 1'b0;
+		accum_result <= 1'b0;
+		sramC_pointer <= sramC_pointer + 1;
 	end
-	
+		
 	//Updating the matrixA and matrixB counters
 	if(pointer_update_flag_stage2 == 1'b1)
-	begin 
-		if ((sramA_column_counter+1) <= columns_A)
+	begin
+		if(sramA_column_counter < columns_A)
 		begin
 			sramA_pointer <= sramA_pointer + 1;
 			sramB_pointer <= sramB_pointer + 1;
 			sramA_column_counter <= sramA_column_counter + 1;
 		end
+		
 		else
-		begin 
-			sramA_column_counter <= 1'b1;
-			if((Bcolumn_tracker+1) <= columns_B)
-			begin 
+		begin
+			sramA_column_counter <= 1;
+			if(Bcolumn_tracker < columns_B)
+			begin
 				Bcolumn_tracker <= Bcolumn_tracker + 1;
 				sramA_pointer <= first_address_of_a_row;
-				sramB_pointer <= sramB_pointer + 1;				
+				sramB_pointer <= sramB_pointer + 1;
 			end
 			else
 			begin
-				Bcolumn_tracker <= 1'b1;
-				if ((Arow_tracker) <= rows_A)
+				if(Arow_tracker <= rows_A)
 				begin
-				Arow_tracker <= Arow_tracker + 1;
-				sramA_pointer <= sramA_pointer + 1;
-				sramB_pointer <= 1'b1;
-				first_address_of_a_row <= sramA_pointer + 1;
+					Bcolumn_tracker <= 1'b1;
+					Arow_tracker <= Arow_tracker + 1;
+					sramA_pointer <= sramA_pointer + 1;
+					sramB_pointer <= 1'b1;
+					first_address_of_a_row <= sramA_pointer + 1;
 				end
 			end
 		end
-    end
-	
+	end
+					
+				
  end
   
   
