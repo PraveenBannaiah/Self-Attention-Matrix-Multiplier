@@ -91,7 +91,10 @@ module MyDesign(
    S9 = 4'b1001,
    S10 = 4'b1010,
    S11 = 4'b1011,
-   S12 = 4'b1100;
+   S12 = 4'b1100,
+   S13 = 4'b1101,
+   S14 = 4'b1110,
+   S15 = 4'b1111;
    
   reg [3:0] current_state, next_state;
   reg [15:0] rows_A, columns_A, rows_B, columns_B;
@@ -110,6 +113,8 @@ module MyDesign(
   reg [31:0] accum_result;
   reg [31:00] temp_accum_result;
   
+  reg [31:0] first_address_of_V;
+  reg [31:0] first_address_of_S;
   
   assign dut_ready = dut_ready_temp;
   
@@ -284,13 +289,42 @@ module MyDesign(
 			
 			if((Arow_tracker > rows_A))
 			begin
-				next_state = S0;                                //Go to stage 3
+				next_state = S11;                                //Go to stage 3
 				pointer_update_flag_stage2 = 1'b0;
-				dut_ready_temp = 1'b1;
+				dut_ready_temp = 1'b0;
 			end
 			
 			else
 				next_state = S7;
+			end
+			
+		S11:begin
+			reg_dut__tb__sram_result_read_address = first_address_of_V;          //Read first value of V
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			next_state = S12;
+			end
+		
+		S12:begin
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			
+			reg_dut__tb__sram_scratchpad_write_address = scratchpad_pointer;
+			reg_dut__tb__sram_scratchpad_write_data = tb__dut__sram_result_read_data;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b1;
+			
+			reg_dut__tb__sram_result_read_address = sramC_pointer;
+			
+			if(Bcolumn_tracker <= columns_A)
+				next_state = S12;
+			else
+				next_state = 0;
+			
+			end
+			
+		S13:begin
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			next_state = S0;
 			end
 			
 			
@@ -319,6 +353,7 @@ begin
 		QKV_counter <= 1'b1;
 		first_address_of_a_matrix_in_B <= 1'b1;
 		scratchpad_pointer <= 1'b0;
+		first_address_of_V <= 1'b0; 
 	end
 	
 	//Assigning the dimensions to flip flops
@@ -343,6 +378,10 @@ begin
 	sramC_pointer <= sramC_pointer + 1;
 	if(QKV_counter > 1'b1)
 		scratchpad_pointer <= scratchpad_pointer + 1;
+	if((QKV_counter > 2'b10) && (first_address_of_V == 1'b0))
+		first_address_of_V <= sramC_pointer + 1;
+	
+	
 	//accum_result <= 1'b0;
 	end
 	
@@ -460,6 +499,37 @@ begin
 					sramB_pointer <= 1'b1;
 					first_address_of_a_row <= sramA_pointer + 1;
 				end
+			end
+		end
+	end
+	
+	
+	//Stage 3
+	if(current_state == S11)
+	begin
+		sramC_pointer <= first_address_of_V + columns_A;
+		scratchpad_pointer <= 1'b0;
+		Arow_tracker <= 2'b10;
+		Bcolumn_tracker <= 1'b1;
+	end
+	
+	else if(current_state == S12)
+	begin
+		if(Arow_tracker < rows_A)
+		begin
+			Arow_tracker <= Arow_tracker + 1;
+			sramC_pointer <= sramC_pointer + columns_A;           //I can't use column B because it was modified in the last stage
+			scratchpad_pointer <= scratchpad_pointer + 1;
+		end
+		else
+		begin
+			if(Bcolumn_tracker <= columns_A)                       //Because Columns B updates in S writing stage to rows A
+			begin
+			Bcolumn_tracker <= Bcolumn_tracker + 1;
+			Arow_tracker <= 1;
+			first_address_of_V <= first_address_of_V + 1;
+			sramC_pointer <= first_address_of_V + 1;
+			scratchpad_pointer <= scratchpad_pointer + 1;
 			end
 		end
 	end
