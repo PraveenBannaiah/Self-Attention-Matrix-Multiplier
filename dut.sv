@@ -268,7 +268,10 @@ module MyDesign(
 			
 		S9:  begin
 			next_state = S10;
-			pointer_update_flag_stage2 = 1'b1;
+			if(rows_B == 1'b1)
+				pointer_update_flag_stage2 = 1'b0;
+			else
+				pointer_update_flag_stage2 = 1'b1;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
 			reg_dut__tb__sram_result_read_address = 1'bx;
@@ -464,7 +467,7 @@ begin
 	//Performing multiplication 
 	if((current_state == S7)||(current_state == S9))
 	begin
-		if((reg_dut__tb__sram_result_read_address == 1'b0)&&(current_state == S7) || ((current_state == S7)&&(stage4 == 1'b1)&&(reg_dut__tb__sram_scratchpad_read_address == 1'b0)))
+		if((reg_dut__tb__sram_result_read_address == 1'b0)&&(current_state == S7) || ((current_state == S7)&&(stage4 == 1'b1)&&(reg_dut__tb__sram_scratchpad_read_address == 1'b0)) || ((current_state == S7)&&(stage4 == 1'b1)&&(rows_B == 1'b01)))   //Some edge case
 			accum_result <= 1'b0;
 		else
 			accum_result <= accum_result + tb__dut__sram_result_read_data * tb__dut__sram_scratchpad_read_data;
@@ -520,7 +523,10 @@ begin
 	//Stage 3
 	if(current_state == S11)
 	begin
-		sramC_pointer <= first_address_of_V + columns_A;
+		if(rows_A == 1'b1)                                          //Some edge case
+			sramC_pointer <= first_address_of_V + 1;
+		else
+			sramC_pointer <= first_address_of_V + columns_A;
 		scratchpad_pointer <= 1'b0;
 		Arow_tracker <= 2'b10;
 		Bcolumn_tracker <= 1'b1;
@@ -541,7 +547,10 @@ begin
 			Bcolumn_tracker <= Bcolumn_tracker + 1;
 			Arow_tracker <= 1;
 			first_address_of_V <= first_address_of_V + 1;
-			sramC_pointer <= first_address_of_V + 1;
+			if(sramC_pointer == first_address_of_V + 1)
+				sramC_pointer <= sramC_pointer + 1;
+			else
+				sramC_pointer <= first_address_of_V + 1;
 			scratchpad_pointer <= scratchpad_pointer + 1;
 			end
 		end
