@@ -108,6 +108,7 @@ module MyDesign(
   reg pointer_update_flag, pointer_update_flag_stage2;
   reg help_flag;
   reg [15:0] sramA_column_counter;
+  reg stage4;
   
   reg [2:0] QKV_counter;
   reg [31:0] accum_result;
@@ -115,6 +116,7 @@ module MyDesign(
   
   reg [31:0] first_address_of_V;
   reg [31:0] first_address_of_S;
+   reg [31:0] first_address_of_Z;
   
   assign dut_ready = dut_ready_temp;
   
@@ -289,7 +291,10 @@ module MyDesign(
 			
 			if((Arow_tracker > rows_A))
 			begin
-				next_state = S11;                                //Go to stage 3
+				if(stage4 == 1'b1)
+					next_state = S0;
+				else
+					next_state = S11;                                //Go to stage 3
 				pointer_update_flag_stage2 = 1'b0;
 				dut_ready_temp = 1'b0;
 			end
@@ -317,14 +322,14 @@ module MyDesign(
 			if(Bcolumn_tracker <= columns_A)
 				next_state = S12;
 			else
-				next_state = 0;
+				next_state = S13;
 			
 			end
 			
-		S13:begin
+		S13:begin                                                      //Setting up last multiplication sequence 
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
-			next_state = S0;
+			next_state = S7;
 			end
 			
 			
@@ -354,6 +359,7 @@ begin
 		first_address_of_a_matrix_in_B <= 1'b1;
 		scratchpad_pointer <= 1'b0;
 		first_address_of_V <= 1'b0; 
+		stage4 <= 1'b0;
 	end
 	
 	//Assigning the dimensions to flip flops
@@ -451,13 +457,14 @@ begin
 		columns_A <= columns_B;
 		columns_B <= rows_A;
 		QKV_counter <= 1'b0;
+		first_address_of_S <= 1'b0;;
 		
 	end
 	
 	//Performing multiplication 
 	if((current_state == S7)||(current_state == S9))
 	begin
-		if((reg_dut__tb__sram_result_read_address == 1'b0)&&(current_state == S7))
+		if((reg_dut__tb__sram_result_read_address == 1'b0)&&(current_state == S7) || ((current_state == S7)&&(stage4 == 1'b1)&&(reg_dut__tb__sram_scratchpad_read_address == 1'b0)))
 			accum_result <= 1'b0;
 		else
 			accum_result <= accum_result + tb__dut__sram_result_read_data * tb__dut__sram_scratchpad_read_data;
@@ -468,6 +475,9 @@ begin
 	begin
 		accum_result <= 1'b0;
 		sramC_pointer <= sramC_pointer + 1;
+		first_address_of_Z <= sramC_pointer + 1;
+		if(first_address_of_S == 1'b0)
+			first_address_of_S <= sramC_pointer;
 	end
 		
 	//Updating the matrixA and matrixB counters
@@ -496,7 +506,10 @@ begin
 					Bcolumn_tracker <= 1'b1;
 					Arow_tracker <= Arow_tracker + 1;
 					sramA_pointer <= sramA_pointer + 1;
-					sramB_pointer <= 1'b1;
+					if(stage4 == 1'b1)
+						sramB_pointer <= 1'b0;
+					else
+						sramB_pointer <= 1'b1;
 					first_address_of_a_row <= sramA_pointer + 1;
 				end
 			end
@@ -532,6 +545,31 @@ begin
 			scratchpad_pointer <= scratchpad_pointer + 1;
 			end
 		end
+	end
+	
+	//Stage 4
+	
+	if(current_state == S13)                                             //Initialise the values for the second stage
+	begin 
+		Arow_tracker <= 1'b1;
+		Bcolumn_tracker <= 1'b1;
+		sramA_pointer <= first_address_of_S;                                          //For S
+		sramB_pointer <= 1'b0;                                          //For V
+		sramC_pointer <= first_address_of_Z;
+		//scratchpad_pointer <= 1'b1;
+		first_address_of_a_row <= first_address_of_S;
+		sramA_column_counter<= 1'b1;
+		accum_result <= 1'b0;
+		pointer_update_flag <= 1'b0;
+		pointer_update_flag_stage2 <= 1'b0;
+		temp_accum_result <= 1'b0;
+		//first_address_of_a_matrix_in_B <= 1'b0;
+		columns_B <= rows_B;
+		rows_B <= columns_B;
+		columns_A <= rows_A;
+		QKV_counter <= 1'b0;
+		stage4 <= 1'b1;
+		
 	end
 					
 				
