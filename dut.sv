@@ -131,6 +131,22 @@ module MyDesign(
   begin
     case(current_state)
 		S0: begin                               //RESET and IDLE block 
+			//latch fixing
+			pointer_update_flag = 1'b0;
+			pointer_update_flag_stage2 = 1'b0;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
+			
+			
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 		    if((dut_valid)&&(reset_n))
@@ -146,6 +162,19 @@ module MyDesign(
 			end
 			
 		S1: begin                                            //Request for dimensions 
+			//Latch fixing
+			pointer_update_flag = 1'b0;
+			pointer_update_flag_stage2 = 1'b0;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			reg_dut__tb__sram_input_read_address = 1'b0;
 			reg_dut__tb__sram_weight_read_address = 1'b0;
 			next_state = S2;
@@ -153,12 +182,34 @@ module MyDesign(
 			
 			  
 		S2: begin                                                  
+			pointer_update_flag = 1'b0;
+			pointer_update_flag_stage2 = 1'b0;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			reg_dut__tb__sram_input_read_address = 1'b1;           //Get dimensions and request for the first elements      
 			reg_dut__tb__sram_weight_read_address = 1'b1;
 			next_state = S3;
 			end
 			
 		S3: begin                                                   //The state we loop around at the time of data collection 
+			pointer_update_flag_stage2 = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
+			
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_input_read_address = sramA_pointer;
@@ -177,6 +228,15 @@ module MyDesign(
 			end
 			  
 		S8: begin                                                                //We get the last data of a particular computation here
+			pointer_update_flag_stage2 = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			next_state = S4;
 			pointer_update_flag = 1'b1;
 			reg_dut__tb__sram_result_write_enable = 1'b0;
@@ -187,11 +247,19 @@ module MyDesign(
 		
 			
 		S4: begin
+			pointer_update_flag_stage2 = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			dut_ready_temp = 1'b0;
+			
 			reg_dut__tb__sram_input_read_address = sramA_pointer;
 			reg_dut__tb__sram_weight_read_address = sramB_pointer;
 			reg_dut__tb__sram_result_write_address = sramC_pointer;
 			reg_dut__tb__sram_result_write_data = accum_result;
 			reg_dut__tb__sram_result_write_enable = 1'b1;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
 			
 			//writing to scratchpad SRAM
 			if(QKV_counter > 1'b1)
@@ -233,6 +301,16 @@ module MyDesign(
 			end
 			
 		S5: begin
+			pointer_update_flag_stage2 = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			reg_dut__tb__sram_input_read_address = sramA_pointer;
 			reg_dut__tb__sram_weight_read_address = sramB_pointer;
 			pointer_update_flag = 1'b1;
@@ -242,12 +320,34 @@ module MyDesign(
 			
 			
 		S6: begin
+			pointer_update_flag = 1'b0;
+			pointer_update_flag_stage2 = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			next_state = S7;
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			end
 			
 		S7: begin
+			pointer_update_flag = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			
+			
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_read_address = sramB_pointer;
@@ -267,20 +367,36 @@ module MyDesign(
 			end
 			
 		S9:  begin
+			pointer_update_flag = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address =1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			
 			next_state = S10;
 			if(rows_B == 1'b1)
 				pointer_update_flag_stage2 = 1'b0;
 			else
 				pointer_update_flag_stage2 = 1'b1;
+				
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
 			reg_dut__tb__sram_result_read_address = 1'bx;
 			
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			reg_dut__tb__sram_result_write_enable = 1'b0; 
 			end
 			
 		S10: begin
+			pointer_update_flag = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			
 			pointer_update_flag_stage2 = 1'b1;
@@ -298,8 +414,9 @@ module MyDesign(
 					next_state = S0;
 				else
 					next_state = S11;                                //Go to stage 3
+					
 				pointer_update_flag_stage2 = 1'b0;
-				dut_ready_temp = 1'b0;
+				//dut_ready_temp = 1'b0;
 			end
 			
 			else
@@ -307,6 +424,17 @@ module MyDesign(
 			end
 			
 		S11:begin
+			pointer_update_flag = 1'bx;;
+			pointer_update_flag_stage2 = 1'bx;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address =1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			
 			reg_dut__tb__sram_result_read_address = first_address_of_V;          //Read first value of V
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
@@ -314,7 +442,15 @@ module MyDesign(
 			end
 		
 		S12:begin
-			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			pointer_update_flag = 1'bx;;
+			pointer_update_flag_stage2 = 1'bx;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
 			
 			reg_dut__tb__sram_scratchpad_write_address = scratchpad_pointer;
 			reg_dut__tb__sram_scratchpad_write_data = tb__dut__sram_result_read_data;
@@ -330,6 +466,18 @@ module MyDesign(
 			end
 			
 		S13:begin                                                      //Setting up last multiplication sequence 
+			pointer_update_flag = 1'bx;;
+			pointer_update_flag_stage2 = 1'bx;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			reg_dut__tb__sram_result_write_enable = 1'b0;
 			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
 			next_state = S7;
@@ -337,6 +485,20 @@ module MyDesign(
 			
 			
 		default: begin
+			pointer_update_flag = 1'bx;;
+			pointer_update_flag_stage2 = 1'bx;
+			reg_dut__tb__sram_result_write_enable = 1'b0;
+			reg_dut__tb__sram_scratchpad_write_enable = 1'b0;
+			reg_dut__tb__sram_input_read_address = 1'bx;
+			reg_dut__tb__sram_weight_read_address = 1'bx;
+			dut_ready_temp = 1'b0;
+			reg_dut__tb__sram_result_write_address = 1'bx;
+			reg_dut__tb__sram_result_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_address = 1'bx;
+			reg_dut__tb__sram_scratchpad_write_data = 1'bx;
+			reg_dut__tb__sram_scratchpad_read_address = 1'bx;
+			reg_dut__tb__sram_result_read_address = 1'bx;
+			
 			next_state = S0;
 			end
 			
@@ -356,7 +518,7 @@ begin
 		first_address_of_a_row <= 1'b1;
 		sramA_column_counter<= 2'b10;
 		accum_result <= 1'b0;
-		pointer_update_flag <= 1'b0;
+		//pointer_update_flag <= 1'b0;
 		temp_accum_result <= 1'b0;
 		QKV_counter <= 1'b1;
 		first_address_of_a_matrix_in_B <= 1'b1;
@@ -452,8 +614,8 @@ begin
 		first_address_of_a_row <= 1'b0;
 		sramA_column_counter<= 1'b1;
 		accum_result <= 1'b0;
-		pointer_update_flag <= 1'b0;
-		pointer_update_flag_stage2 <= 1'b0;
+		//pointer_update_flag <= 1'b0;
+		//pointer_update_flag_stage2 <= 1'b0;
 		temp_accum_result <= 1'b0;
 		//first_address_of_a_matrix_in_B <= 1'b0;
 		rows_B <= columns_B;                                           //Both matrices are similar 
@@ -569,8 +731,8 @@ begin
 		first_address_of_a_row <= first_address_of_S;
 		sramA_column_counter<= 1'b1;
 		accum_result <= 1'b0;
-		pointer_update_flag <= 1'b0;
-		pointer_update_flag_stage2 <= 1'b0;
+		//pointer_update_flag <= 1'b0;
+		//pointer_update_flag_stage2 <= 1'b0;
 		temp_accum_result <= 1'b0;
 		//first_address_of_a_matrix_in_B <= 1'b0;
 		columns_B <= rows_B;
